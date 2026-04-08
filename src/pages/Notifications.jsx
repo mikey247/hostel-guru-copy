@@ -74,7 +74,6 @@ export default function Notifications() {
             key={notif.id}
             onClick={() => markRead(notif.id)}
             style={{
-              background: 'white',
               borderRadius: '8px',
               padding: '16px 20px',
               display: 'flex',

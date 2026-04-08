@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import StatusBadge from '../../components/StatusBadge'
+import Modal from '../../components/Modal'
+import Toast from '../../components/Toast'
+import { useToast } from '../../hooks/useToast'
 
-const PAYMENTS = [
+const INITIAL_PAYMENTS = [
   { student: 'John Doe', room: '204-B', amount: '$450', due: 'Apr 1, 2025', paid: '—', status: 'Pending' },
   { student: 'Emily Chen', room: '202-B', amount: '$450', due: 'Apr 1, 2025', paid: 'Mar 18, 2025', status: 'Paid' },
   { student: 'Sarah Mitchell', room: '101-A', amount: '$300', due: 'Mar 1, 2025', paid: '—', status: 'Overdue' },
@@ -17,13 +20,47 @@ const PAYMENTS = [
 ]
 
 export default function AdminPayments() {
+  const [payments, setPayments] = useState(INITIAL_PAYMENTS)
   const [statusFilter, setStatusFilter] = useState('All')
+  const [recordModal, setRecordModal] = useState(false)
+  const [newPayment, setNewPayment] = useState({ student: '', room: '', amount: '', period: '' })
+  const { toast, showToast, hideToast } = useToast()
 
-  const totalCollected = PAYMENTS.filter(p => p.status === 'Paid').reduce((sum, p) => sum + parseInt(p.amount.replace('$', '')), 0)
-  const totalPending = PAYMENTS.filter(p => p.status === 'Pending').reduce((sum, p) => sum + parseInt(p.amount.replace('$', '')), 0)
-  const totalOverdue = PAYMENTS.filter(p => p.status === 'Overdue').reduce((sum, p) => sum + parseInt(p.amount.replace('$', '')), 0)
+  const totalCollected = payments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + parseInt(p.amount.replace('$', '')), 0)
+  const totalPending = payments.filter(p => p.status === 'Pending').reduce((sum, p) => sum + parseInt(p.amount.replace('$', '')), 0)
+  const totalOverdue = payments.filter(p => p.status === 'Overdue').reduce((sum, p) => sum + parseInt(p.amount.replace('$', '')), 0)
 
-  const filtered = PAYMENTS.filter(p => statusFilter === 'All' || p.status === statusFilter)
+  const filtered = payments.filter(p => statusFilter === 'All' || p.status === statusFilter)
+
+  const markPaid = (studentName) => {
+    const today = 'Mar 21, 2025'
+    setPayments(prev => prev.map(p =>
+      p.student === studentName && p.status !== 'Paid'
+        ? { ...p, status: 'Paid', paid: today }
+        : p
+    ))
+    showToast(`Payment for ${studentName} marked as paid.`, 'success')
+  }
+
+  const sendReminder = (studentName) => {
+    showToast(`Payment reminder sent to ${studentName} via email.`, 'info')
+  }
+
+  const handleRecordPayment = () => {
+    if (!newPayment.student || !newPayment.amount) return
+    const entry = {
+      student: newPayment.student,
+      room: newPayment.room || '—',
+      amount: `$${newPayment.amount}`,
+      due: 'Apr 1, 2025',
+      paid: 'Mar 21, 2025',
+      status: 'Paid',
+    }
+    setPayments(prev => [entry, ...prev])
+    setRecordModal(false)
+    setNewPayment({ student: '', room: '', amount: '', period: '' })
+    showToast(`Payment of $${newPayment.amount} recorded for ${newPayment.student}.`, 'success')
+  }
 
   return (
     <div>
@@ -32,7 +69,7 @@ export default function AdminPayments() {
           <h1 className="page-title">Payment Management</h1>
           <p className="page-subtitle">April 2025 billing cycle</p>
         </div>
-        <button className="btn btn-primary">+ Record Payment</button>
+        <button className="btn btn-primary" onClick={() => setRecordModal(true)}>+ Record Payment</button>
       </div>
 
       {/* Summary Cards */}
@@ -40,17 +77,17 @@ export default function AdminPayments() {
         <div className="stat-card" style={{ borderLeft: '4px solid #16a34a' }}>
           <div className="label">💰 Total Collected</div>
           <div className="value" style={{ color: '#16a34a' }}>${totalCollected.toLocaleString()}</div>
-          <div className="sub">{PAYMENTS.filter(p => p.status === 'Paid').length} payments received</div>
+          <div className="sub">{payments.filter(p => p.status === 'Paid').length} payments received</div>
         </div>
         <div className="stat-card" style={{ borderLeft: '4px solid #ca8a04' }}>
           <div className="label">⏳ Pending</div>
           <div className="value" style={{ color: '#ca8a04' }}>${totalPending.toLocaleString()}</div>
-          <div className="sub">{PAYMENTS.filter(p => p.status === 'Pending').length} awaiting payment</div>
+          <div className="sub">{payments.filter(p => p.status === 'Pending').length} awaiting payment</div>
         </div>
         <div className="stat-card" style={{ borderLeft: '4px solid #dc2626' }}>
           <div className="label">🚨 Overdue</div>
           <div className="value" style={{ color: '#dc2626' }}>${totalOverdue.toLocaleString()}</div>
-          <div className="sub">{PAYMENTS.filter(p => p.status === 'Overdue').length} overdue accounts</div>
+          <div className="sub">{payments.filter(p => p.status === 'Overdue').length} overdue accounts</div>
         </div>
       </div>
 
@@ -68,7 +105,7 @@ export default function AdminPayments() {
               fontSize: '13px',
             }}
           >
-            {f} <span style={{ fontSize: '11px', opacity: 0.7 }}>({PAYMENTS.filter(p => f === 'All' || p.status === f).length})</span>
+            {f} <span style={{ fontSize: '11px', opacity: 0.7 }}>({payments.filter(p => f === 'All' || p.status === f).length})</span>
           </button>
         ))}
       </div>
@@ -98,9 +135,20 @@ export default function AdminPayments() {
                 <td>
                   <div style={{ display: 'flex', gap: '6px' }}>
                     {p.status !== 'Paid' && (
-                      <button className="btn btn-sm" style={{ background: '#dcfce7', color: '#16a34a' }}>✓ Mark Paid</button>
+                      <button
+                        className="btn btn-sm"
+                        style={{ background: '#dcfce7', color: '#16a34a' }}
+                        onClick={() => markPaid(p.student)}
+                      >
+                        ✓ Mark Paid
+                      </button>
                     )}
-                    <button className="btn btn-secondary btn-sm">📧 Remind</button>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => sendReminder(p.student)}
+                    >
+                      📧 Remind
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -108,6 +156,41 @@ export default function AdminPayments() {
           </tbody>
         </table>
       </div>
+
+      {/* Record Payment Modal */}
+      {recordModal && (
+        <Modal
+          title="Record Manual Payment"
+          onClose={() => { setRecordModal(false); setNewPayment({ student: '', room: '', amount: '', period: '' }) }}
+          footer={
+            <>
+              <button className="btn btn-secondary" onClick={() => setRecordModal(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleRecordPayment} disabled={!newPayment.student || !newPayment.amount}>
+                ✓ Record Payment
+              </button>
+            </>
+          }
+        >
+          <div className="form-group">
+            <label>Student Name</label>
+            <input className="form-control" placeholder="e.g. John Doe" value={newPayment.student} onChange={e => setNewPayment(p => ({ ...p, student: e.target.value }))} />
+          </div>
+          <div className="form-group">
+            <label>Room Number</label>
+            <input className="form-control" placeholder="e.g. 204-B" value={newPayment.room} onChange={e => setNewPayment(p => ({ ...p, room: e.target.value }))} />
+          </div>
+          <div className="form-group">
+            <label>Amount ($)</label>
+            <input className="form-control" type="number" placeholder="e.g. 450" value={newPayment.amount} onChange={e => setNewPayment(p => ({ ...p, amount: e.target.value }))} />
+          </div>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label>Payment Period</label>
+            <input className="form-control" placeholder="e.g. April 2025" value={newPayment.period} onChange={e => setNewPayment(p => ({ ...p, period: e.target.value }))} />
+          </div>
+        </Modal>
+      )}
+
+      <Toast toast={toast} onClose={hideToast} />
     </div>
   )
 }

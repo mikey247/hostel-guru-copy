@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 const LINKS = [
   { label: '📊 Overview', to: '/admin' },
@@ -10,6 +10,7 @@ const LINKS = [
 
 export default function Sidebar() {
   const location = useLocation()
+  const navigate = useNavigate()
 
   return (
     <aside style={{
@@ -48,17 +49,26 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div style={{ marginTop: 'auto', padding: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-        <Link to="/dashboard" style={{
-          color: 'rgba(255,255,255,0.55)',
-          fontSize: '12px',
-          display: 'block',
-          padding: '8px 14px',
-          borderRadius: '6px',
-          transition: 'color 0.15s',
-        }}>
-          ← Back to Student View
-        </Link>
+      <div style={{ marginTop: 'auto', padding: '16px', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 14px 6px' }}>
+          Admin Account
+        </div>
+        <button
+          onClick={() => navigate('/admin-login')}
+          style={{
+            color: 'rgba(255,255,255,0.55)',
+            fontSize: '12px',
+            display: 'block',
+            padding: '8px 14px',
+            borderRadius: '6px',
+            transition: 'color 0.15s',
+            background: 'transparent',
+            textAlign: 'left',
+            width: '100%',
+          }}
+        >
+          🔒 Sign Out
+        </button>
       </div>
     </aside>
   )

@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import StatusBadge from '../components/StatusBadge'
+import Toast from '../components/Toast'
+import { useToast } from '../hooks/useToast'
 
-const PAST_REQUESTS = [
+const INITIAL_REQUESTS = [
   { id: 'SR-008', date: 'Mar 20, 2025', type: 'Electrical', description: 'Power outlet not working in room', priority: 'High', status: 'Open', resolved: '—' },
   { id: 'SR-007', date: 'Mar 15, 2025', type: 'Internet', description: 'WiFi drops frequently after 10pm', priority: 'Medium', status: 'In Progress', resolved: '—' },
   { id: 'SR-006', date: 'Mar 5, 2025', type: 'Housekeeping', description: 'Deep cleaning request for common area', priority: 'Low', status: 'Resolved', resolved: 'Mar 8, 2025' },
@@ -18,10 +20,23 @@ export default function ServiceRequests() {
   const [type, setType] = useState('')
   const [description, setDescription] = useState('')
   const [priority, setPriority] = useState('Medium')
+  const [requests, setRequests] = useState(INITIAL_REQUESTS)
+  const { toast, showToast, hideToast } = useToast()
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    alert(`Request submitted!\nType: ${type}\nPriority: ${priority}\n\nYou will receive a confirmation email shortly.`)
+    const nextId = `SR-${String(parseInt(requests[0].id.split('-')[1]) + 1).padStart(3, '0')}`
+    const newRequest = {
+      id: nextId,
+      date: 'Mar 21, 2025',
+      type,
+      description,
+      priority,
+      status: 'Open',
+      resolved: '—',
+    }
+    setRequests(prev => [newRequest, ...prev])
+    showToast(`Request ${nextId} submitted! Type: ${type} · Priority: ${priority}. You'll receive a confirmation email.`, 'success')
     setType('')
     setDescription('')
     setPriority('Medium')
@@ -95,7 +110,7 @@ export default function ServiceRequests() {
             </tr>
           </thead>
           <tbody>
-            {PAST_REQUESTS.map(r => (
+            {requests.map(r => (
               <tr key={r.id}>
                 <td style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: '600', color: '#2563eb' }}>{r.id}</td>
                 <td style={{ whiteSpace: 'nowrap' }}>{r.date}</td>
@@ -115,6 +130,8 @@ export default function ServiceRequests() {
           </tbody>
         </table>
       </div>
+
+      <Toast toast={toast} onClose={hideToast} />
     </div>
   )
 }
