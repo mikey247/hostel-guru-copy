@@ -25,7 +25,8 @@ export default function ServiceRequests() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    const nextId = `SR-${String(parseInt(requests[0].id.split('-')[1]) + 1).padStart(3, '0')}`
+    const lastNum = requests.length > 0 ? parseInt(requests[0].id.split('-')[1]) : 0
+    const nextId = `SR-${String(lastNum + 1).padStart(3, '0')}`
     const newRequest = {
       id: nextId,
       date: 'Mar 21, 2025',

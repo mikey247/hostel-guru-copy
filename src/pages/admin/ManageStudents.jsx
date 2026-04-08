@@ -40,7 +40,8 @@ export default function ManageStudents() {
   )
 
   const handleAdd = () => {
-    const nextNum = String(parseInt(students[students.length - 1].id.split('-')[2]) + 1).padStart(4, '0')
+    const lastId = students.length > 0 ? parseInt(students[students.length - 1].id.split('-')[2]) : 0
+    const nextNum = String(lastId + 1).padStart(4, '0')
     const id = `STU-2024-${nextNum}`
     setStudents(prev => [...prev, { ...newStudent, id }])
     setAddModalOpen(false)
@@ -109,9 +110,9 @@ export default function ManageStudents() {
                 <td><StatusBadge status={s.status} /></td>
                 <td>
                   <div style={{ display: 'flex', gap: '6px' }}>
-                    <button className="btn btn-secondary btn-sm" onClick={() => setEditStudent({ ...s })}>✏️ Edit</button>
+                    <button className="btn btn-secondary btn-sm" onClick={() => setEditStudent({ ...s })} aria-label={`Edit ${s.name}`}>✏️ Edit</button>
                     {s.status === 'Active' && (
-                      <button className="btn btn-sm" style={{ background: '#fee2e2', color: '#dc2626' }} onClick={() => setDeactivateStudent(s)}>
+                      <button className="btn btn-sm" style={{ background: '#fee2e2', color: '#dc2626' }} onClick={() => setDeactivateStudent(s)} aria-label={`Deactivate ${s.name}`}>
                         🚫 Deactivate
                       </button>
                     )}

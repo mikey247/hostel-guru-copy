@@ -183,16 +183,16 @@ export default function Payments() {
             <div style={{ marginTop: '12px' }}>
               <div className="form-group" style={{ marginBottom: '12px' }}>
                 <label>Card Number</label>
-                <input className="form-control" placeholder="**** **** **** 4242" defaultValue="**** **** **** 4242" readOnly style={{ color: '#6b7280' }} />
+                <input className="form-control" placeholder="•••• •••• •••• ••••" readOnly style={{ color: '#6b7280' }} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label>Expiry</label>
-                  <input className="form-control" placeholder="MM/YY" defaultValue="12/26" readOnly style={{ color: '#6b7280' }} />
+                  <input className="form-control" placeholder="MM/YY" readOnly style={{ color: '#6b7280' }} />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label>CVV</label>
-                  <input className="form-control" placeholder="***" defaultValue="***" readOnly style={{ color: '#6b7280' }} />
+                  <input className="form-control" placeholder="•••" readOnly style={{ color: '#6b7280' }} />
                 </div>
               </div>
             </div>

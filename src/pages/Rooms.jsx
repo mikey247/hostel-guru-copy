@@ -134,7 +134,7 @@ export default function Rooms() {
               disabled={room.status !== 'Available'}
               onClick={e => {
                 e.stopPropagation()
-                if (room.status === 'Available') setBookingRoom(room)
+                setBookingRoom(room)
               }}
               style={{ width: '100%', justifyContent: 'center' }}
             >
