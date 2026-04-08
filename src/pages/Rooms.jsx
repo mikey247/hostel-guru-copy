@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import StatusBadge from '../components/StatusBadge'
+import Modal from '../components/Modal'
+import Toast from '../components/Toast'
+import { useToast } from '../hooks/useToast'
 
 const ROOMS = [
   { id: '101-A', type: 'Single', floor: 1, status: 'Available', price: 300, capacity: 1, occupied: 0, amenities: ['WiFi', 'Desk', 'Wardrobe'] },
@@ -20,6 +23,9 @@ export default function Rooms() {
   const [floorFilter, setFloorFilter] = useState('All')
   const [typeFilter, setTypeFilter] = useState('All')
   const [availFilter, setAvailFilter] = useState('All')
+  const [selectedRoom, setSelectedRoom] = useState(null)
+  const [bookingRoom, setBookingRoom] = useState(null)
+  const { toast, showToast, hideToast } = useToast()
 
   const filtered = ROOMS.filter(r => {
     if (floorFilter !== 'All' && r.floor !== parseInt(floorFilter)) return false
@@ -27,6 +33,11 @@ export default function Rooms() {
     if (availFilter !== 'All' && r.status !== availFilter) return false
     return true
   })
+
+  const handleBook = () => {
+    setBookingRoom(null)
+    showToast(`Room ${bookingRoom.id} booked successfully! You'll receive a confirmation email shortly.`, 'success')
+  }
 
   return (
     <div>
@@ -61,7 +72,20 @@ export default function Rooms() {
       {/* Room Cards Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
         {filtered.map(room => (
-          <div key={room.id} className="card" style={{ transition: 'box-shadow 0.15s' }}>
+          <div
+            key={room.id}
+            className="card"
+            onClick={() => setSelectedRoom(room)}
+            style={{ transition: 'box-shadow 0.15s, transform 0.15s', cursor: 'pointer' }}
+            onMouseEnter={e => {
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)'
+              e.currentTarget.style.transform = 'translateY(-2px)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.boxShadow = ''
+              e.currentTarget.style.transform = ''
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
               <div>
                 <div style={{ fontSize: '18px', fontWeight: '700', color: '#1a2b4a' }}>Room {room.id}</div>
@@ -108,6 +132,10 @@ export default function Rooms() {
             <button
               className="btn btn-primary"
               disabled={room.status !== 'Available'}
+              onClick={e => {
+                e.stopPropagation()
+                setBookingRoom(room)
+              }}
               style={{ width: '100%', justifyContent: 'center' }}
             >
               {room.status === 'Available' ? '📋 Book Room' : room.status === 'Reserved' ? '⏳ Reserved' : '🚫 Occupied'}
@@ -115,6 +143,87 @@ export default function Rooms() {
           </div>
         ))}
       </div>
+
+      {/* Room Detail Modal */}
+      {selectedRoom && (
+        <Modal
+          title={`Room ${selectedRoom.id} — Details`}
+          onClose={() => setSelectedRoom(null)}
+          footer={
+            <>
+              <button className="btn btn-secondary" onClick={() => setSelectedRoom(null)}>Close</button>
+              {selectedRoom.status === 'Available' && (
+                <button className="btn btn-primary" onClick={() => { setSelectedRoom(null); setBookingRoom(selectedRoom) }}>
+                  📋 Book This Room
+                </button>
+              )}
+            </>
+          }
+        >
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+            {[
+              { label: 'Room Number', value: selectedRoom.id },
+              { label: 'Type', value: selectedRoom.type },
+              { label: 'Floor', value: `Floor ${selectedRoom.floor}` },
+              { label: 'Monthly Rent', value: `$${selectedRoom.price}` },
+              { label: 'Capacity', value: `${selectedRoom.capacity} person${selectedRoom.capacity > 1 ? 's' : ''}` },
+              { label: 'Current Occupancy', value: `${selectedRoom.occupied} / ${selectedRoom.capacity}` },
+            ].map(item => (
+              <div key={item.label} style={{ background: '#f9fafb', borderRadius: '8px', padding: '12px' }}>
+                <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>{item.label}</div>
+                <div style={{ fontSize: '15px', fontWeight: '700', color: '#1a2b4a' }}>{item.value}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: '600', textTransform: 'uppercase', marginBottom: '8px' }}>Amenities</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {selectedRoom.amenities.map(a => (
+                <span key={a} style={{ background: '#f0f5ff', color: '#2563eb', padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: '500' }}>✓ {a}</span>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: '#f9fafb', borderRadius: '8px' }}>
+            <span style={{ fontSize: '13px', color: '#6b7280' }}>Availability Status</span>
+            <StatusBadge status={selectedRoom.status} />
+          </div>
+        </Modal>
+      )}
+
+      {/* Booking Confirmation Modal */}
+      {bookingRoom && (
+        <Modal
+          title="Confirm Room Booking"
+          onClose={() => setBookingRoom(null)}
+          footer={
+            <>
+              <button className="btn btn-secondary" onClick={() => setBookingRoom(null)}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleBook}>✓ Confirm Booking</button>
+            </>
+          }
+        >
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '8px' }}>🏠</div>
+            <div style={{ fontSize: '20px', fontWeight: '800', color: '#1a2b4a' }}>Room {bookingRoom.id}</div>
+            <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>{bookingRoom.type} · Floor {bookingRoom.floor}</div>
+          </div>
+          <div style={{ background: '#f0f5ff', borderRadius: '8px', padding: '16px', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ color: '#6b7280', fontSize: '13px' }}>Monthly Rent</span>
+              <span style={{ fontWeight: '700', color: '#1a2b4a' }}>${bookingRoom.price}/month</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#6b7280', fontSize: '13px' }}>Amenities</span>
+              <span style={{ fontSize: '13px', color: '#374151' }}>{bookingRoom.amenities.join(', ')}</span>
+            </div>
+          </div>
+          <p style={{ fontSize: '13px', color: '#6b7280', textAlign: 'center' }}>
+            By confirming, a booking request will be sent to the hostel office for approval.
+          </p>
+        </Modal>
+      )}
+
+      <Toast toast={toast} onClose={hideToast} />
     </div>
   )
 }

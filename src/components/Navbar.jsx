@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 const NAV_LINKS = [
   { label: 'Dashboard', to: '/dashboard' },
@@ -11,6 +11,7 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const location = useLocation()
+  const navigate = useNavigate()
 
   return (
     <nav style={{
@@ -56,16 +57,6 @@ export default function Navbar() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <Link to="/admin" style={{
-          color: 'rgba(255,255,255,0.75)',
-          fontSize: '12px',
-          padding: '5px 10px',
-          border: '1px solid rgba(255,255,255,0.3)',
-          borderRadius: '5px',
-          transition: 'all 0.15s',
-        }}>
-          Admin
-        </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{
             width: '34px',
@@ -81,6 +72,20 @@ export default function Navbar() {
           }}>JD</div>
           <span style={{ color: 'white', fontSize: '13px', fontWeight: '500' }}>John Doe</span>
         </div>
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            color: 'rgba(255,255,255,0.7)',
+            fontSize: '12px',
+            padding: '5px 10px',
+            border: '1px solid rgba(255,255,255,0.25)',
+            borderRadius: '5px',
+            background: 'transparent',
+            transition: 'all 0.15s',
+          }}
+        >
+          Sign Out
+        </button>
       </div>
     </nav>
   )
